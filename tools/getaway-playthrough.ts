@@ -11,7 +11,7 @@ const turn = (a: number, b: number) => ((a - b + Math.PI * 3) % (Math.PI * 2)) -
 
 export class DriveBot {
   private goal: { x: number; z: number } | null = null;
-  private seed = 1;
+  constructor(private seed = 1) {}
   private stuck = 0;
   private reverse = 0;
   input(s: GetawayState): DriveInput {
@@ -48,10 +48,11 @@ export class DriveBot {
   }
 }
 
-export function playGetaway(stars: number, driver: string, maxSeconds = 240) {
+/** `seed` varies the bot's route choices, so several attempts sample different chases. */
+export function playGetaway(stars: number, driver: string, maxSeconds = 240, seed = 1) {
   const d = CREW.find((c) => c.id === driver)!;
   const s = createGetaway({ top: d.top!, grip: d.grip!, stars });
-  const bot = new DriveBot();
+  const bot = new DriveBot(seed);
   for (let i = 0; i < maxSeconds * 60 && s.phase === 'escape'; i++) stepGetaway(s, bot.input(s), 1 / 60);
   return { phase: s.phase, seconds: Math.round(s.t), damage: Math.round(s.van.damage), lost: !s.wanted };
 }
