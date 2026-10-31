@@ -4,7 +4,7 @@
  *
  *   npx tsx tools/getaway-playthrough.ts
  */
-import { createGetaway, stepGetaway, roadAt, roadRoute, signedSpeed, CITY, type GetawayState, type DriveInput } from '../client/heist/getaway-sim';
+import { createGetaway, stepGetaway, roadAt, roadRoute, signedSpeed, lineOfSight, CITY, type GetawayState, type DriveInput } from '../client/heist/getaway-sim';
 import { CREW } from '../shared/heist-campaign';
 
 const turn = (a: number, b: number) => ((a - b + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
@@ -12,25 +12,42 @@ const turn = (a: number, b: number) => ((a - b + Math.PI * 3) % (Math.PI * 2)) -
 export class DriveBot {
   private goal: { x: number; z: number } | null = null;
   constructor(private seed = 1) {}
+  /** 32-bit LCG: exact integer maths, identical on every machine. */
+  private random() { this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0; return this.seed / 4294967296; }
   private stuck = 0;
   private reverse = 0;
   input(s: GetawayState): DriveInput {
     const v = s.van;
     if (s.wanted) {
-      // Pick a junction two blocks away, on the side away from the nearest police car.
-      const near = s.cops.filter((c) => !c.leaving).sort((a, b) => Math.hypot(a.x - v.x, a.z - v.z) - Math.hypot(b.x - v.x, b.z - v.z))[0];
+      // Pick a junction one to three blocks away that the police can't see, reached without driving past them.
+      const cops = s.cops.filter((c) => !c.leaving);
+      const copDist = (p: { x: number; z: number }) => Math.min(999, ...cops.map((c) => Math.hypot(p.x - c.x, p.z - c.z)));
       if (!this.goal || Math.hypot(this.goal.x - v.x, this.goal.z - v.z) < 10) {
         const i = Math.round((v.x - roadAt(0)) / (CITY.block + CITY.road)), j = Math.round((v.z - roadAt(0)) / (CITY.block + CITY.road));
-        this.seed = (this.seed * 1103515245 + 12345) % 2147483648;
-        const options = [[2, 1], [1, 2], [-2, 1], [1, -2], [2, -1], [-1, 2], [-2, -1], [-1, -2]].map(([di, dj]) => ({ x: roadAt(Math.max(0, Math.min(CITY.blocks, i + di))), z: roadAt(Math.max(0, Math.min(CITY.blocks, j + dj))) }));
-        const score = (p: { x: number; z: number }) => (near ? Math.hypot(p.x - near.x, p.z - near.z) : 0) + (this.seed % 7);
-        this.goal = options.sort((a, b) => score(b) - score(a))[0];
+        const options: { p: { x: number; z: number }; score: number }[] = [];
+        for (let di = -3; di <= 3; di++) for (let dj = -3; dj <= 3; dj++) {
+          const ni = i + di, nj = j + dj;
+          if ((!di && !dj) || ni < 0 || nj < 0 || ni > CITY.blocks || nj > CITY.blocks) continue;
+          const p = { x: roadAt(ni), z: roadAt(nj) }, route = roadRoute(v, p);
+          const first = route.find((q) => Math.hypot(q.x - v.x, q.z - v.z) > 7) ?? p;
+          const uTurn = Math.abs(turn(Math.atan2(first.x - v.x, first.z - v.z), v.yaw)) > 2.2;
+          const pastCop = route.some((q) => copDist(q) < 30);
+          const seen = cops.some((c) => lineOfSight(c, p));
+          // Each candidate gets its own seeded jitter, so different seeds really take different routes.
+          options.push({ p, score: copDist(p) - (pastCop ? 80 : 0) - (uTurn ? 40 : 0) - (seen ? 30 : 0) + this.random() * 15 });
+        }
+        this.goal = options.sort((a, b) => b.score - a.score)[0].p;
       }
     } else this.goal = s.dropoff;
     const route = roadRoute(v, this.goal);
-    // Skip junctions already reached or passed, so the van never doubles back.
+    // Skip junctions already reached, or passed while driving down the road to the next one, so the van
+    // never doubles back and never cuts a corner through a block.
     const dist = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.hypot(a.x - b.x, a.z - b.z);
-    while (route.length > 1 && (dist(v, route[0]) < 7 || dist(v, route[1]) < dist(route[0], route[1]))) route.shift();
+    const passed = (a: { x: number; z: number }, b: { x: number; z: number }) => {
+      const len = dist(a, b) || 1, along = ((v.x - a.x) * (b.x - a.x) + (v.z - a.z) * (b.z - a.z)) / len;
+      return along > 0 && Math.abs((v.x - a.x) * (b.z - a.z) - (v.z - a.z) * (b.x - a.x)) / len < CITY.road / 2;
+    };
+    while (route.length > 1 && (dist(v, route[0]) < 7 || passed(route[0], route[1]))) route.shift();
     const next = route[0] ?? this.goal;
     // Wedged against a wall: reverse out with the wheel turned the other way.
     const moving = Math.abs(signedSpeed(v));
