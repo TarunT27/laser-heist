@@ -67,11 +67,11 @@ let campaign=loadCampaign();
 /** The campaign job in progress (null for quick practice and online rooms) and the getaway drive, when one is running. */
 let run:{level:number;kind:'setup'|'finale';setupId?:string}|null=null,getaway:{sim:GetawayState;view:GetawayView;acc:number;take:number;outro:number|null;before:PoseSnapshot|null}|null=null;
 let lastNotice='';
-/** Online rooms need the Node server. On static hosting (GitHub Pages) /health is missing, so the menu offers solo play only. */
+/** Online rooms need the Node server. Static builds (VITE_SOLO_ONLY, set for GitHub Pages) skip the check; elsewhere a missing /health means solo play only. */
 let onlineAvailable:boolean|null=null;
 function applyOnline(){const form=document.getElementById('entry-form');if(!form||onlineAvailable!==false)return;form.innerHTML='<div class="eyebrow muted">PLAY ONLINE</div><p class="fine">Online rooms need the game server (<code>npm start</code>). This copy is solo-only — the whole campaign is here.</p>';}
 // Some static hosts answer any path with the page itself, so require the server's own {"ok":true} health reply.
-function checkOnline(){fetch(asset('health'),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>j?.ok===true).catch(()=>false).then(ok=>{onlineAvailable=ok;applyOnline();});}
+function checkOnline(){if(import.meta.env.VITE_SOLO_ONLY){onlineAvailable=false;applyOnline();return;}fetch(asset('health'),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>j?.ok===true).catch(()=>false).then(ok=>{onlineAvailable=ok;applyOnline();});}
 /** The Blender getaway city, preloaded after the heist assets; the drive falls back to a generated city without it. */
 let getawayCity:Object3D|null=null;
 function loadGetawayCity(){const loader=new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath(asset('draco/')));loader.loadAsync(asset('heist/getaway-city.glb?v=20261030-city2')).then(g=>{getawayCity=g.scene;}).catch(error=>console.warn('Getaway city unavailable; using the generated city',error));}
