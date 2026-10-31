@@ -1,0 +1,31 @@
+{
+  "name": "laser-heist",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server/index.ts",
+    "start": "tsx server/index.ts",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test server/tests/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run build",
+    "validate:assets": "node tools/validate_crew.mjs"
+  },
+  "dependencies": {
+    "three": "^0.180.0",
+    "ws": "^8.18.3",
+    "tsx": "^4.20.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "@types/three": "^0.180.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "@playwright/test": "^1.56.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

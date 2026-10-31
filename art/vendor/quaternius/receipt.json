@@ -1,0 +1,34 @@
+{
+  "author": "Quaternius",
+  "license": "CC0-1.0",
+  "official_sources": [
+    "https://quaternius.com/packs/universalbasecharacters.html",
+    "https://quaternius.com/packs/universalanimationlibrary.html"
+  ],
+  "files": [
+    {
+      "file": "base.glb",
+      "source": "https://raw.githubusercontent.com/programasweights/avatar/main/public/assets/character.glb",
+      "bytes": 741320,
+      "sha256": "d6f3b64cab629f6ddca9ba063811aeffd3663a8a4e49ade47cd9505dc2bbd70f"
+    },
+    {
+      "file": "base-license.txt",
+      "source": "https://raw.githubusercontent.com/programasweights/avatar/main/public/assets/QUATERNIUS-LICENSE.txt",
+      "bytes": 806,
+      "sha256": "0f4beaf0fe360a7732e58bbe3dbf60a2422367fbea60cb9ea4add968f383268e"
+    },
+    {
+      "file": "gaits.glb",
+      "source": "https://raw.githubusercontent.com/OpenAgentsInc/openagents/main/assets/verse/characters/quaternius/gaits.glb",
+      "bytes": 7618436,
+      "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997"
+    },
+    {
+      "file": "animations-license.txt",
+      "source": "https://raw.githubusercontent.com/OpenAgentsInc/openagents/main/assets/verse/characters/quaternius/animations-license.txt",
+      "bytes": 318,
+      "sha256": "67e65a88def1ce573211f5cac3f514014abeface8fe48309c010491186b3a89a"
+    }
+  ]
+}

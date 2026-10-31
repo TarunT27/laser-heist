@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: laser-heist
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run typecheck && npm test && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.23.2

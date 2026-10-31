@@ -1,0 +1,9 @@
+# Extraction and security prop upgrade
+
+Updated 2026-10-30.
+
+- `public/heist/helicopter.glb` (415,364 bytes) is built by `tools/build_helicopter.py`; editable source `art/helicopter.blend`. Shaped fuselage, cockpit glazing/frames, door seams, engine cowlings, tail boom, stabilizers, skids and lights. `MainRotor` spins about local Y; `TailRotor` about local X. Export axes are Y-up, +Z forward, metres. World footprint in the exported neutral diagonal-rotor pose is approximately 5.84 × 2.91 × 7.99 m. All mesh attributes were checked finite. Studio renders: `docs/laser/qa/helicopter-{hero,profile,top}.png`.
+- `public/heist/crew.glb` includes 19 skinned `Loot_` objects. The runtime toggles these with player carrying state and hides the smaller daypack. The curved olive canvas duffel has end panels, seams, compression webbing, buckles, zipper teeth/pull and gold security seal. It follows the spine rather than a root-level floating box. Source and rebuild pipeline remain `tools/build_operative.py` and `art/crew.blend`. `docs/laser/qa/operative-loot.png` shows its rear silhouette. Body/animations retain the existing Quaternius license files; the bag and helicopter are custom mesh work.
+- `client/heist/laser-grid.ts` contains physical optical hardware with bright cores, translucent glow and contact lights. `LaserGate` preserves the original moving 2.5 m gap between sliding receivers. `SecurityLaserSector` supports fixed timed rectangular sectors from the new map framework. It takes a sector rectangle and `update(active)`; positions/widths derive from the sector rather than decorative disconnected lines.
+
+The map-framework rewrite in Builder 2 is concurrent work. Its new hazard sectors supersede the original moving-gap mechanic. Whole-game checks must be repeated after that integration; the earlier 21-test passing result predates the map rewrite.
